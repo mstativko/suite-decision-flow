@@ -2,7 +2,7 @@
   'use strict';
 
   const SVG_URL =
-    'https://cdn.jsdelivr.net/gh/mstativko/suite-decision-flow@main/suite-decision-flow.svg';
+    'https://cdn.jsdelivr.net/gh/mstativko/suite-decision-flow@main/suite-decision-flow.svg?v=3';
 
   const config = {
     inactiveOpacity: 0.35,
