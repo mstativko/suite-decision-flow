@@ -103,9 +103,15 @@
      * Only now do we apply the inactive state.
      * Before JS loads, the SVG remains fully visible.
      */
-    gsap.set(scenarios, {
-      opacity: config.inactiveOpacity
-    });
+    const suiteBox = suite.getBBox();
+    const suiteCenterX = suiteBox.x + suiteBox.width / 2;
+    const suiteCenterY = suiteBox.y + suiteBox.height / 2;
+
+gsap.set(suite, {
+
+  svgOrigin: suiteCenterX + ' ' + suiteCenterY
+
+});
 
     gsap.set(suite, {
       transformOrigin: '50% 50%',
