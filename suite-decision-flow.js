@@ -6,15 +6,8 @@
 
   const config = {
     inactiveOpacity: 0.35,
-    suiteScale: 1.04,
-
-    pulseUp: 0.25,
-    pulseDown: 0.3,
-
-    scenarioFade: 0.3,
-    scenarioHold: 0.6,
-
-    loopPause: 0.7
+    scenarioFade: 0.35,
+    scenarioHold: 1.2
   };
 
   function init() {
@@ -27,8 +20,7 @@
 
     /*
      * Load SVG as text and inject it INLINE.
-     * This is important: GSAP needs access to the elements
-     * inside the SVG DOM.
+     * GSAP needs access to the elements inside the SVG DOM.
      */
     fetch(SVG_URL)
       .then(function (response) {
@@ -68,8 +60,8 @@
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     /*
-     * Progressive enhancement:
-     * if reduced motion is enabled, leave the SVG completely static.
+     * Reduced motion:
+     * leave the original SVG completely static.
      */
     if (reduceMotion) {
       return;
@@ -82,40 +74,34 @@
 
     const gsap = window.gsap;
 
-    const suite = container.querySelector('#suite-core');
-
     const scenarios = [
       container.querySelector('#scenario-1'),
       container.querySelector('#scenario-2'),
       container.querySelector('#scenario-3')
     ];
 
-    if (!suite || scenarios.some(function (scenario) {
+    if (scenarios.some(function (scenario) {
       return !scenario;
     })) {
       console.error(
-        '[Suite Decision Flow] Required SVG IDs were not found.'
+        '[Suite Decision Flow] Required SVG scenario IDs were not found.'
       );
       return;
     }
 
     /*
-     * Only now do we apply the inactive state.
-     * Before JS loads, the SVG remains fully visible.
+     * Initial state:
+     *
+     * Scenario 1 = active
+     * Scenario 2 = inactive
+     * Scenario 3 = inactive
      */
-    const suiteBox = suite.getBBox();
-    const suiteCenterX = suiteBox.x + suiteBox.width / 2;
-    const suiteCenterY = suiteBox.y + suiteBox.height / 2;
+    gsap.set(scenarios, {
+      opacity: config.inactiveOpacity
+    });
 
-gsap.set(suite, {
-
-  svgOrigin: suiteCenterX + ' ' + suiteCenterY
-
-});
-
-    gsap.set(suite, {
-      transformOrigin: '50% 50%',
-      transformBox: 'fill-box'
+    gsap.set(scenarios[0], {
+      opacity: 1
     });
 
     const timeline = gsap.timeline({
@@ -124,47 +110,65 @@ gsap.set(suite, {
     });
 
     /*
-     * Suite pulse
+     * Hold Scenario 1.
+     */
+    timeline.to({}, {
+      duration: config.scenarioHold
+    });
+
+    /*
+     * Scenario 1 → Scenario 2
      */
     timeline
-      .to(suite, {
-        scale: config.suiteScale,
-        duration: config.pulseUp,
-        ease: 'power1.out'
-      })
-      .to(suite, {
-        scale: 1,
-        duration: config.pulseDown,
+      .to(scenarios[0], {
+        opacity: config.inactiveOpacity,
+        duration: config.scenarioFade,
         ease: 'power1.inOut'
+      })
+      .to(scenarios[1], {
+        opacity: 1,
+        duration: config.scenarioFade,
+        ease: 'power1.inOut'
+      }, '<')
+      .to({}, {
+        duration: config.scenarioHold
       });
 
     /*
-     * Demonstrate the three possible scenarios.
-     * These are alternatives, not sequential workflow steps.
+     * Scenario 2 → Scenario 3
      */
-    scenarios.forEach(function (scenario) {
-      timeline
-        .to(scenario, {
-          opacity: 1,
-          duration: config.scenarioFade,
-          ease: 'power1.out'
-        })
-        .to({}, {
-          duration: config.scenarioHold
-        })
-        .to(scenario, {
-          opacity: config.inactiveOpacity,
-          duration: config.scenarioFade,
-          ease: 'power1.in'
-        });
-    });
-
-    timeline.to({}, {
-      duration: config.loopPause
-    });
+    timeline
+      .to(scenarios[1], {
+        opacity: config.inactiveOpacity,
+        duration: config.scenarioFade,
+        ease: 'power1.inOut'
+      })
+      .to(scenarios[2], {
+        opacity: 1,
+        duration: config.scenarioFade,
+        ease: 'power1.inOut'
+      }, '<')
+      .to({}, {
+        duration: config.scenarioHold
+      });
 
     /*
-     * Only animate while illustration is visible.
+     * Scenario 3 → Scenario 1
+     */
+    timeline
+      .to(scenarios[2], {
+        opacity: config.inactiveOpacity,
+        duration: config.scenarioFade,
+        ease: 'power1.inOut'
+      })
+      .to(scenarios[0], {
+        opacity: 1,
+        duration: config.scenarioFade,
+        ease: 'power1.inOut'
+      }, '<');
+
+    /*
+     * Only animate while the illustration is visible.
      */
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(
